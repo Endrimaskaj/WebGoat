@@ -70,24 +70,38 @@ public class CommentsCache {
     var jc = JAXBContext.newInstance(Comment.class);
     var xif = XMLInputFactory.newInstance();
 
-    // Secure XMLInputFactory against XXE attacks
-    xif.setProperty(XMLInputFactory.SUPPORT_DTD, false); // Disable DTDs entirely
-    xif.setProperty(XMLConstants.ACCESS_EXTERNAL_DTD, ""); // Disallow external DTDs
-    xif.setProperty(XMLConstants.ACCESS_EXTERNAL_SCHEMA, ""); // Disallow external schemas
+    if (securityEnabled) {
+      try {
+        xif.setProperty(XMLInputFactory.SUPPORT_DTD, false); // Disable DTDs entirely
+      } catch (IllegalArgumentException e) {
+        throw new XMLStreamException("Failed to disable DTD support on XMLInputFactory", e);
+      }
+      try {
+        xif.setProperty(XMLConstants.ACCESS_EXTERNAL_DTD, ""); // Disallow external DTDs
+      } catch (IllegalArgumentException e) {
+        throw new XMLStreamException("Failed to disallow external DTDs on XMLInputFactory", e);
+      }
+      try {
+        xif.setProperty(XMLConstants.ACCESS_EXTERNAL_SCHEMA, ""); // Disallow external schemas
+      } catch (IllegalArgumentException e) {
+        throw new XMLStreamException("Failed to disallow external schemas on XMLInputFactory", e);
+      }
+    }
 
     var xsr = xif.createXMLStreamReader(new StringReader(xml));
 
     var unmarshaller = jc.createUnmarshaller();
-    // Secure the unmarshaller against XXE attacks
-    try {
+    if (securityEnabled) {
+      try {
         unmarshaller.setProperty(XMLConstants.ACCESS_EXTERNAL_DTD, "");
-    } catch (Exception e) {
-        // Property might not be supported by all implementations; ignore if so
-    }
-    try {
+      } catch (Exception e) {
+        throw new JAXBException("Failed to disallow external DTDs on Unmarshaller", e);
+      }
+      try {
         unmarshaller.setProperty(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
-    } catch (Exception e) {
-        // Property might not be supported by all implementations; ignore if so
+      } catch (Exception e) {
+        throw new JAXBException("Failed to disallow external schemas on Unmarshaller", e);
+      }
     }
     return (Comment) unmarshaller.unmarshal(xsr);
   }
