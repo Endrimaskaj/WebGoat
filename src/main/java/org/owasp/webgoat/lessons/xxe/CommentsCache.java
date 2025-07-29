@@ -65,43 +65,38 @@ public class CommentsCache {
    * progress etc). In real life the XmlMapper bean defined above will be used automatically and the
    * Comment class can be directly used in the controller method (instead of a String)
    */
-  protected Comment parseXml(String xml, boolean securityEnabled)
+  protected Comment parseXml(String xml)
       throws XMLStreamException, JAXBException {
     var jc = JAXBContext.newInstance(Comment.class);
     var xif = XMLInputFactory.newInstance();
-
-    if (securityEnabled) {
-      try {
-        xif.setProperty(XMLInputFactory.SUPPORT_DTD, false); // Disable DTDs entirely
-      } catch (IllegalArgumentException e) {
-        throw new XMLStreamException("Failed to disable DTD support on XMLInputFactory", e);
-      }
-      try {
-        xif.setProperty(XMLConstants.ACCESS_EXTERNAL_DTD, ""); // Disallow external DTDs
-      } catch (IllegalArgumentException e) {
-        throw new XMLStreamException("Failed to disallow external DTDs on XMLInputFactory", e);
-      }
-      try {
-        xif.setProperty(XMLConstants.ACCESS_EXTERNAL_SCHEMA, ""); // Disallow external schemas
-      } catch (IllegalArgumentException e) {
-        throw new XMLStreamException("Failed to disallow external schemas on XMLInputFactory", e);
-      }
+    try {
+      xif.setProperty(XMLInputFactory.SUPPORT_DTD, false); // Disable DTDs entirely
+    } catch (IllegalArgumentException e) {
+      throw new XMLStreamException("Failed to disable DTD support on XMLInputFactory", e);
+    }
+    try {
+      xif.setProperty(XMLConstants.ACCESS_EXTERNAL_DTD, ""); // Disallow external DTDs
+    } catch (IllegalArgumentException e) {
+      throw new XMLStreamException("Failed to disallow external DTDs on XMLInputFactory", e);
+    }
+    try {
+      xif.setProperty(XMLConstants.ACCESS_EXTERNAL_SCHEMA, ""); // Disallow external schemas
+    } catch (IllegalArgumentException e) {
+      throw new XMLStreamException("Failed to disallow external schemas on XMLInputFactory", e);
     }
 
     var xsr = xif.createXMLStreamReader(new StringReader(xml));
 
     var unmarshaller = jc.createUnmarshaller();
-    if (securityEnabled) {
-      try {
-        unmarshaller.setProperty(XMLConstants.ACCESS_EXTERNAL_DTD, "");
-      } catch (Exception e) {
-        throw new JAXBException("Failed to disallow external DTDs on Unmarshaller", e);
-      }
-      try {
-        unmarshaller.setProperty(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
-      } catch (Exception e) {
-        throw new JAXBException("Failed to disallow external schemas on Unmarshaller", e);
-      }
+    try {
+      unmarshaller.setProperty(XMLConstants.ACCESS_EXTERNAL_DTD, "");
+    } catch (Exception e) {
+      throw new JAXBException("Failed to disallow external DTDs on Unmarshaller", e);
+    }
+    try {
+      unmarshaller.setProperty(XMLConstants.ACCESS_EXTERNAL_SCHEMA, "");
+    } catch (Exception e) {
+      throw new JAXBException("Failed to disallow external schemas on Unmarshaller", e);
     }
     return (Comment) unmarshaller.unmarshal(xsr);
   }
