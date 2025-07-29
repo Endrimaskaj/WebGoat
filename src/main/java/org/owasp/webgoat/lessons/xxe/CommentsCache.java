@@ -70,19 +70,14 @@ public class CommentsCache {
     var jc = JAXBContext.newInstance(Comment.class);
     var xif = XMLInputFactory.newInstance();
     try {
+      // Disable DTDs and external entities for StAX
       xif.setProperty(XMLInputFactory.SUPPORT_DTD, false); // Disable DTDs entirely
-    } catch (IllegalArgumentException e) {
-      throw new XMLStreamException("Failed to disable DTD support on XMLInputFactory", e);
-    }
-    try {
+      xif.setProperty("javax.xml.stream.isSupportingExternalEntities", false); // Disable external entities
+      xif.setProperty("javax.xml.stream.supportDTD", false); // Disable DTDs
       xif.setProperty(XMLConstants.ACCESS_EXTERNAL_DTD, ""); // Disallow external DTDs
-    } catch (IllegalArgumentException e) {
-      throw new XMLStreamException("Failed to disallow external DTDs on XMLInputFactory", e);
-    }
-    try {
       xif.setProperty(XMLConstants.ACCESS_EXTERNAL_SCHEMA, ""); // Disallow external schemas
     } catch (IllegalArgumentException e) {
-      throw new XMLStreamException("Failed to disallow external schemas on XMLInputFactory", e);
+      throw new XMLStreamException("Failed to securely configure XMLInputFactory against XXE", e);
     }
 
     var xsr = xif.createXMLStreamReader(new StringReader(xml));
